@@ -43,7 +43,36 @@ const register = asyncHandle(async (req, res) => {
             accesstoken: await getJsonWebToken(email, newUser.id)
         },
     });
-})
+});
+
+const login = asyncHandle(async (req, res) => {
+    const { email, password } = req.body
+    const exitstingUser = await UserModel.findOne({ email });
+
+    if (!exitstingUser) {
+        res.status(403).json({
+            message: 'User not found'
+        })
+        throw new Error('User not found!!!')
+    }
+
+    const isMatchPassword = await bcryp.compare(password, exitstingUser.password)
+    if (!isMatchPassword) {
+        res.status(404)
+        throw new Error('Email or Password is not correct!')
+    }
+
+    res.status(200).json({
+        message: 'Login successfuly',
+        data: {
+            id: exitstingUser.id,
+            email: exitstingUser.email,
+            accesstoken: await getJsonWebToken(email, exitstingUser.id)
+        }
+    })
+});
+
 module.exports = {
     register,
+    login,
 }
